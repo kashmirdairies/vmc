@@ -1,0 +1,89 @@
+<!DOCTYPE html><html lang="ur"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#1f4e79"><link rel="manifest" href="manifest.json"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png">
+<title>VMC Entry</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#eef2f6;color:#111}
+header{background:#1f4e79;color:#fff;padding:8px 10px;position:sticky;top:0;z-index:5}
+header h1{margin:0;font-size:17px;display:flex;justify-content:space-between;align-items:center}header .u{font-family:'Noto Nastaliq Urdu',serif;color:#ffe9a8;font-size:15px}
+.bar{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}.bar input,.bar button{font-size:15px;padding:6px 8px;border-radius:6px;border:1px solid #9fb3c8}
+.bar button{background:#fff;color:#1f4e79;font-weight:bold}.bar button.on{background:#ffd54f;color:#000;border-color:#e0a800}
+#q{flex:1;min-width:120px}#net{font-size:12px;padding:2px 8px;border-radius:10px;background:#2e8b57}#net.off{background:#c0392b}#net.wait{background:#e67e22}
+.row{display:grid;grid-template-columns:30px 1fr 64px 52px 52px;gap:4px;align-items:center;background:#fff;margin:4px 6px;padding:5px 6px;border-radius:8px;border:1px solid #d6dee8}
+.row.done{border-color:#2e8b57;background:#effaf2}.row.err{border-color:#c0392b;background:#fdecea}.row.wait{border-color:#e67e22;background:#fff4e5}
+.no{font-weight:bold;color:#1f4e79;text-align:center}.nm{font-family:'Noto Nastaliq Urdu',serif;font-size:16px;direction:rtl;text-align:right;line-height:1.9;overflow:hidden;white-space:nowrap}
+.nm small{display:block;font-family:Arial;font-size:11px;color:#667;direction:ltr;text-align:left;line-height:1.2}
+.row input{width:100%;font-size:17px;padding:6px 3px;text-align:center;border:1px solid #b9c6d6;border-radius:6px}
+.hd{display:grid;grid-template-columns:30px 1fr 64px 52px 52px;gap:4px;margin:6px 6px 0;padding:0 6px;font-size:12px;font-weight:bold;color:#1f4e79;text-align:center}
+#tot{position:fixed;left:0;right:0;bottom:0;background:#1f4e79;color:#fff;padding:9px 10px;font-size:15px;display:flex;justify-content:space-between}
+#msg{font-size:12px;color:#ffe9a8;margin-top:4px;min-height:14px}
+#set{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:20;align-items:center;justify-content:center}
+#set .b{background:#fff;border-radius:12px;padding:16px;width:92%;max-width:440px}#set h3{margin:0 0 10px;color:#1f4e79}
+#set label{display:block;font-size:13px;font-weight:bold;margin-top:10px}#set input{width:100%;font-size:15px;padding:8px;border:1px solid #9fb3c8;border-radius:6px}
+#set .btns{display:flex;gap:8px;margin-top:14px}#set button{flex:1;font-size:16px;padding:9px;border-radius:8px;border:0;background:#1f4e79;color:#fff;font-weight:bold}#set button.g{background:#ccd6e0;color:#111}
+#set p{font-size:12px;color:#556;margin:6px 0 0}
+</style></head><body>
+<header><h1><span>VMC Entry <span id="net">آن لائن</span></span><span class="u">کشمیر ڈیریز جڑانوالہ</span></h1>
+<div class="bar"><input type="date" id="d"><button id="bM" class="on" onclick="setShift('Morning')">صبح</button><button id="bE" onclick="setShift('Evening')">شام</button>
+<button id="bP" class="on" onclick="setKind('Purchase')">پرچیز</button><button id="bS" onclick="setKind('Sale')">سیل</button></div>
+<div class="bar"><input id="q" placeholder="نمبر یا نام تلاش کریں" oninput="draw()"><button onclick="reload()">⟳</button><button onclick="openSet()">⚙</button></div>
+<div id="msg"></div></header>
+<div class="hd"><span>#</span><span>نام</span><span>دودھ</span><span>فیٹ</span><span>LR</span></div>
+<div id="list"></div><div style="height:60px"></div>
+<div id="tot"><span id="tl"></span><span id="tc"></span></div>
+<div id="set"><div class="b"><h3>⚙ سیٹنگ (ایک بار)</h3>
+<label>Web app URL  (آخر پر /exec)</label><input id="sU" placeholder="https://script.google.com/macros/s/.../exec">
+<label>PIN</label><input id="sP" inputmode="numeric">
+<p>یہ وہی لنک اور PIN ہیں جو کمپیوٹر کے VMC میں 📲 Mobile میں لکھے ہیں۔</p>
+<div class="btns"><button onclick="saveSet()">محفوظ کریں</button><button class="g" onclick="$('set').style.display='none'">بند</button></div></div></div>
+<script>
+function $(i){return document.getElementById(i)}
+var A=JSON.parse(localStorage.getItem('vmc_acc')||'[]'),E={},S={shift:'Morning',kind:'Purchase'},
+    U=localStorage.getItem('vmc_url')||'',PIN=localStorage.getItem('vmc_pin')||'',Q=JSON.parse(localStorage.getItem('vmc_queue')||'[]');
+(function(){var m=location.search.match(/[?&]u=([^&]+)/);if(m){U=decodeURIComponent(m[1]);localStorage.setItem('vmc_url',U);history.replaceState(null,'',location.pathname)}})();
+function msg(t){$('msg').textContent=t}
+function net(){var n=$('net');if(!navigator.onLine){n.className='off';n.textContent='آف لائن'}else if(Q.length){n.className='wait';n.textContent=Q.length+' باقی'}else{n.className='';n.textContent='آن لائن'}}
+function key(d,s,k,n){return d+'|'+s+'|'+k+'|'+n}
+function openSet(){$('sU').value=U;$('sP').value=PIN;$('set').style.display='flex'}
+function saveSet(){U=$('sU').value.trim();PIN=$('sP').value.trim();localStorage.setItem('vmc_url',U);localStorage.setItem('vmc_pin',PIN);$('set').style.display='none';reload()}
+function api(params){return fetch(U+(U.indexOf('?')<0?'?':'&')+new URLSearchParams(Object.assign({pin:PIN},params))).then(function(r){return r.json()})}
+function post(body){body.pin=PIN;return fetch(U,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(body)}).then(function(r){return r.json()})}
+function setShift(s){S.shift=s;$('bM').className=s=='Morning'?'on':'';$('bE').className=s=='Evening'?'on':'';draw()}
+function setKind(k){S.kind=k;$('bP').className=k=='Purchase'?'on':'';$('bS').className=k=='Sale'?'on':'';draw()}
+function reload(){if(!U||!PIN){openSet();return}
+ msg('لوڈ ہو رہا ہے...');
+ api({api:'accounts'}).then(function(r){if(!r.ok)throw new Error(r.error=='PIN'?'غلط PIN':r.error);A=r.accounts||[];localStorage.setItem('vmc_acc',JSON.stringify(A));
+   if(!A.length)msg('اکاؤنٹ لسٹ خالی: کمپیوٹر سے "Send account list" دبائیں');return api({api:'entries',date:$('d').value})})
+  .then(function(r){if(!r)return;E={};(r.entries||[]).forEach(function(e){E[key(e.date,e.shift,e.kind,e.name)]=e});
+   Q.forEach(function(q){E[key(q.date,q.shift,q.kind,q.name)]=q});localStorage.setItem('vmc_E_'+$('d').value,JSON.stringify(E));if(A.length)msg('');draw();flush()})
+  .catch(function(x){var c=localStorage.getItem('vmc_E_'+$('d').value);if(c)E=JSON.parse(c);Q.forEach(function(q){E[key(q.date,q.shift,q.kind,q.name)]=q});draw();
+   msg(navigator.onLine?('غلطی: '+x.message+' (سیٹنگ ⚙ میں لنک / PIN دیکھیں)'):'انٹرنیٹ نہیں — انٹری کرتے جائیں، انٹرنیٹ آتے ہی خود چلی جائیں گی')})}
+function counts(){var p=$('d').value+'|'+S.shift+'|'+S.kind+'|',c=0,t=0;for(var k in E){if(k.indexOf(p)===0&&E[k].milk!==''&&E[k].milk!=null){c++;t+=Number(E[k].milk)||0}}
+ $('tl').textContent=(S.shift=='Morning'?'صبح':'شام')+' '+(S.kind=='Purchase'?'پرچیز':'سیل')+':  '+c+' اکاؤنٹ';$('tc').textContent='کل دودھ '+(Math.round(t*10)/10)}
+function inQ(n){var d=$('d').value;return Q.some(function(q){return q.date==d&&q.shift==S.shift&&q.kind==S.kind&&q.name==n})}
+function draw(){var q=$('q').value.trim().toLowerCase(),h='',d=$('d').value;
+ A.filter(function(a){return a.kind==S.kind&&(!a.shift||a.shift==S.shift)}).forEach(function(a){
+  if(q&&String(a.no)!==q&&a.name.toLowerCase().indexOf(q)<0&&String(a.urdu).indexOf(q)<0)return;
+  var e=E[key(d,S.shift,S.kind,a.name)]||{},v=function(x){return x===''||x==null?'':x},has=e.milk!==''&&e.milk!=null;
+  h+='<div class="row'+(inQ(a.name)?' wait':(has?' done':''))+'" data-n="'+encodeURIComponent(a.name)+'"><span class="no">'+a.no+'</span><span class="nm">'+(a.urdu||a.name)+'<small>'+a.name+'</small></span>'+
+   '<input inputmode="decimal" data-f="milk" value="'+v(e.milk)+'"><input inputmode="decimal" data-f="fat" value="'+v(e.fat)+'"><input inputmode="decimal" data-f="lr" value="'+v(e.lr)+'"></div>'});
+ $('list').innerHTML=h||'<p style="text-align:center;color:#667">'+(A.length?'کوئی اکاؤنٹ نہیں ملا':'⟳ دبائیں')+'</p>';counts();net();
+ document.querySelectorAll('.row input').forEach(function(i){i.addEventListener('change',function(){save(i.parentNode)});
+  i.addEventListener('keydown',function(ev){if(ev.key==='Enter'){ev.preventDefault();var all=[].slice.call(document.querySelectorAll('.row input')),k=all.indexOf(i);if(all[k+1])all[k+1].focus()}})})}
+function save(r){var n=decodeURIComponent(r.dataset.n),f={};r.querySelectorAll('input').forEach(function(i){f[i.dataset.f]=i.value.trim().replace(',','.')});
+ for(var k in f){if(f[k]!==''&&isNaN(Number(f[k]))){r.className='row err';msg('غلط نمبر: '+f[k]);return}}
+ var e={date:$('d').value,shift:S.shift,kind:S.kind,name:n,milk:f.milk===''?'':Number(f.milk),fat:f.fat===''?'':Number(f.fat),lr:f.lr===''?'':Number(f.lr)};
+ E[key(e.date,e.shift,e.kind,n)]=e;Q=Q.filter(function(q){return !(q.date==e.date&&q.shift==e.shift&&q.kind==e.kind&&q.name==n)});Q.push(e);
+ localStorage.setItem('vmc_queue',JSON.stringify(Q));localStorage.setItem('vmc_E_'+e.date,JSON.stringify(E));r.className='row wait';counts();net();flush()}
+var busy=false;
+function flush(){if(busy||!Q.length||!navigator.onLine||!U)return;busy=true;var e=Q[0];
+ post({api:'save',entry:e}).then(function(r){if(!r.ok)throw new Error(r.error=='PIN'?'غلط PIN':String(r.error));
+   Q.shift();localStorage.setItem('vmc_queue',JSON.stringify(Q));msg('✓ محفوظ: '+e.name);
+   var row=document.querySelector('.row[data-n="'+encodeURIComponent(e.name)+'"]');if(row&&e.date==$('d').value&&e.shift==S.shift&&e.kind==S.kind&&!inQ(e.name))row.className='row'+(e.milk!==''?' done':'');
+   busy=false;net();flush()})
+  .catch(function(x){busy=false;net();msg((navigator.onLine?'ابھی نہیں گئی: '+x.message:'انٹرنیٹ نہیں')+' — '+Q.length+' انٹری موبائل میں محفوظ، خود چلی جائیں گی');setTimeout(flush,15000)})}
+window.addEventListener('online',function(){net();flush()});window.addEventListener('offline',net);
+(function(){var t=new Date();$('d').value=t.getFullYear()+'-'+('0'+(t.getMonth()+1)).slice(-2)+'-'+('0'+t.getDate()).slice(-2);
+ if(t.getHours()>=13)setShift('Evening');$('d').addEventListener('change',reload);draw();reload();setInterval(flush,20000);
+ if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js')})();
+</script></body></html>
