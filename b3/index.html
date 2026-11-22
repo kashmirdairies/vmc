@@ -1,26 +1,31 @@
 <!DOCTYPE html><html lang="ur"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 <meta name="theme-color" content="#1f4e79"><link rel="manifest" href="manifest.json"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png">
-<title>VMC Entry</title>
+<title>KMS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400;700&display=swap">
 <style>
-*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#eef2f6;color:#111}
+*{box-sizing:border-box}body{margin:0;font-family:Roboto,Arial,'Noto Nastaliq Urdu',sans-serif;background:#eef2f6;color:#111}
+input,button,select,textarea{font-family:inherit}
+.bar button,#set button,.add,.x{line-height:1.9;padding-top:2px!important;padding-bottom:2px!important}
+#msg,#tot,#set p,#set label,.hd,.br3.h,.rc .g label{line-height:2}
 header{background:#1f4e79;color:#fff;padding:8px 10px;position:sticky;top:0;z-index:5}
 header.br{background:#1b7a43}
-header h1{margin:0;font-size:17px;display:flex;justify-content:space-between;align-items:center;gap:6px}header .u{font-family:'Noto Nastaliq Urdu',serif;color:#ffe9a8;font-size:15px}
-.bar{display:flex;gap:5px;margin-top:6px;flex-wrap:wrap}.bar input,.bar button{font-size:15px;padding:6px 8px;border-radius:6px;border:1px solid #9fb3c8}
+header h1{margin:0;font-size:18px;line-height:2;display:flex;justify-content:space-between;align-items:center;gap:6px}header .u{font-family:'Noto Nastaliq Urdu',serif;color:#ffe9a8;font-size:15px}
+.bar{display:flex;gap:5px;margin-top:6px;flex-wrap:wrap}.bar input,.bar button{font-size:16px;padding:6px 8px;border-radius:6px;border:1px solid #9fb3c8}
 .bar button{background:#fff;color:#1f4e79;font-weight:bold}.bar button.on{background:#ffd54f;color:#000;border-color:#e0a800}
-.tabs button{flex:1;padding:6px 2px;font-size:14px}
-#q{flex:1;min-width:110px}#net{font-size:12px;padding:2px 8px;border-radius:10px;background:#2e8b57}#net.off{background:#c0392b}#net.wait{background:#e67e22}
+.tabs button{flex:1;padding:4px 2px;font-size:15px}
+#q{flex:1;min-width:110px}#net{font-size:12px;line-height:1.9;padding:0 8px;border-radius:10px;background:#2e8b57}#net.off{background:#c0392b}#net.wait{background:#e67e22}
 .row{display:grid;grid-template-columns:30px 1fr 64px 52px 52px;gap:4px;align-items:center;background:#fff;margin:4px 6px;padding:5px 6px;border-radius:8px;border:1px solid #d6dee8}
 .done{border-color:#2e8b57!important;background:#effaf2!important}.err{border-color:#c0392b!important;background:#fdecea!important}.wait{border-color:#e67e22!important;background:#fff4e5!important}
 .no{font-weight:bold;color:#1f4e79;text-align:center}.nm{font-family:'Noto Nastaliq Urdu',serif;font-size:16px;direction:rtl;text-align:right;line-height:1.9;overflow:hidden;white-space:nowrap}
 .nm small{display:block;font-family:Arial;font-size:11px;color:#667;direction:ltr;text-align:left;line-height:1.2}
 input.n,select.n{width:100%;font-size:17px;padding:6px 3px;text-align:center;border:1px solid #b9c6d6;border-radius:6px;background:#fff}
-.hd{display:grid;grid-template-columns:30px 1fr 64px 52px 52px;gap:4px;margin:6px 6px 0;padding:0 6px;font-size:12px;font-weight:bold;color:#1f4e79;text-align:center}
+.hd{display:grid;grid-template-columns:30px 1fr 64px 52px 52px;gap:4px;margin:6px 6px 0;padding:0 6px;font-size:13px;font-weight:bold;color:#1f4e79;text-align:center}
 .rc{background:#fff;margin:6px;padding:7px;border-radius:8px;border:1px solid #d6dee8}
 .rc .top{display:flex;gap:5px;align-items:center}.rc .top input{flex:1;font-size:16px;padding:6px;border:1px solid #b9c6d6;border-radius:6px}
 .rc .top b{color:#1f4e79;min-width:22px;text-align:center}.rc .x{background:#fdecea;border:1px solid #e3a59d;color:#c0392b;border-radius:6px;font-size:16px;padding:5px 10px}
-.rc .g{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin-top:5px}.rc .g label{font-size:11px;color:#556;text-align:center;display:block}
+.rc .g{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin-top:5px}.rc .g label{font-size:12px;color:#556;text-align:center;display:block}
 .add{display:block;margin:8px auto;font-size:16px;padding:9px 22px;border-radius:8px;border:2px dashed #1f4e79;background:#fff;color:#1f4e79;font-weight:bold}
 .card{background:#fff;margin:6px;border-radius:10px;border:1px solid #d6dee8;overflow:hidden}
 .card h3{margin:0;padding:6px 10px;font-size:15px;color:#fff;background:#1b7a43;display:flex;justify-content:space-between}.card h3 span{font-family:'Noto Nastaliq Urdu',serif;font-weight:normal;color:#ffe9a8}
@@ -28,19 +33,19 @@ input.n,select.n{width:100%;font-size:17px;padding:6px 3px;text-align:center;bor
 .kv .l{font-family:'Noto Nastaliq Urdu',serif;font-size:15px;direction:rtl;text-align:right;line-height:1.8}.kv .l small{font-family:Arial;font-size:11px;color:#778;display:block;direction:ltr;text-align:left;line-height:1.1}
 .kv.t{grid-template-columns:1fr}.kv.t input{text-align:right;direction:rtl}
 .br3{display:grid;grid-template-columns:1fr 70px 70px 70px;gap:4px;align-items:center;padding:5px 8px;border-top:1px solid #eef1f4}
-.br3.h{font-size:11px;font-weight:bold;color:#1b7a43;text-align:center;border:0;padding-bottom:0}
+.br3.h{font-size:12px;font-weight:bold;color:#1b7a43;text-align:center;border:0;padding-bottom:0}
 .br3 .l{font-family:'Noto Nastaliq Urdu',serif;font-size:15px;direction:rtl;text-align:right;line-height:1.8;overflow:hidden;white-space:nowrap}
 .xr{display:grid;grid-template-columns:26px 1fr 90px;gap:4px;align-items:center;padding:4px 8px;border-top:1px solid #eef1f4}.xr input.d{font-size:15px;padding:6px;border:1px solid #b9c6d6;border-radius:6px;width:100%}
-#tot{position:fixed;left:0;right:0;bottom:0;background:#1f4e79;color:#fff;padding:9px 10px;font-size:15px;display:flex;justify-content:space-between}
+#tot{position:fixed;left:0;right:0;bottom:0;background:#1f4e79;color:#fff;padding:4px 10px;font-size:16px;display:flex;justify-content:space-between}
 header.br~#tot{background:#1b7a43}
-#msg{font-size:12px;color:#ffe9a8;margin-top:4px;min-height:14px}
+#msg{font-size:13px;color:#ffe9a8;margin-top:2px;min-height:20px}
 #set{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:20;align-items:center;justify-content:center}
 #set .b{background:#fff;border-radius:12px;padding:16px;width:92%;max-width:440px}#set h3{margin:0 0 10px;color:#1f4e79}
-#set label{display:block;font-size:13px;font-weight:bold;margin-top:10px}#set input{width:100%;font-size:15px;padding:8px;border:1px solid #9fb3c8;border-radius:6px}
+#set label{display:block;font-size:14px;font-weight:bold;margin-top:10px}#set input{width:100%;font-size:15px;padding:8px;border:1px solid #9fb3c8;border-radius:6px}
 #set .btns{display:flex;gap:8px;margin-top:14px}#set button{flex:1;font-size:16px;padding:9px;border-radius:8px;border:0;background:#1f4e79;color:#fff;font-weight:bold}#set button.g{background:#ccd6e0;color:#111}
 #set p{font-size:12px;color:#556;margin:6px 0 0}
 </style></head><body>
-<header id="hdr"><h1><span><span id="ttl">VMC Entry</span> <span id="net">آن لائن</span></span><span class="u" id="sub">کشمیر ڈیریز جڑانوالہ</span></h1>
+<header id="hdr"><h1><span><span id="ttl">KMS</span> <span id="net">آن لائن</span></span><span class="u" id="sub">کشمیر ڈیریز جڑانوالہ</span></h1>
 <div class="bar" id="bar1"></div>
 <div class="bar tabs" id="tabs"></div>
 <div class="bar"><input id="q" placeholder="نمبر یا نام تلاش کریں" oninput="draw()"><button onclick="reload()">⟳</button><button onclick="openSet()">⚙</button></div>
@@ -77,9 +82,9 @@ function today(){var t=new Date();return t.getFullYear()+'-'+('0'+(t.getMonth()+
 /* ================= layout ================= */
 var KINDS=[['Purchase','پرچیز'],['Sale','سیل'],['Random Purchase','ر۔ پرچیز'],['Random Sale','ر۔ سیل']];
 var BTABS=[['slip','سلپ و سیل'],['cust','ادھار گاہک'],['acc','خرچے / ملازم'],['extra','ایکسٹرا']];
-function build(){var h=$('hdr'),d=dval()||today();$('sT').textContent='⚙ سیٹنگ  —  '+(BR?('برانچ '+BR):'سنٹر');
+function build(){var h=$('hdr'),d=dval()||today();$('sT').textContent='⚙ سیٹنگ  —  '+(BR?('KMS '+BR):'KMS سنٹر');
  h.className=BR?'br':'';
- $('ttl').textContent=BR?('برانچ '+BR):'VMC Entry';$('sub').textContent=BR&&INFO&&INFO.urdu?INFO.urdu:'کشمیر ڈیریز جڑانوالہ';
+ $('ttl').textContent=BR?('KMS '+BR):'KMS سنٹر';$('sub').textContent=BR&&INFO&&INFO.urdu?INFO.urdu:'کشمیر ڈیریز جڑانوالہ';
  $('bar1').innerHTML='<input type="date" id="d" value="'+d+'">'+(BR?'':'<button id="bM" onclick="setShift(\'Morning\')">صبح</button><button id="bE" onclick="setShift(\'Evening\')">شام</button>');
  $('d').addEventListener('change',reload);
  $('tabs').innerHTML=(BR?BTABS:KINDS).map(function(k){return '<button data-k="'+k[0]+'" onclick="setTab(this.dataset.k)">'+k[1]+'</button>'}).join('');
