@@ -39,6 +39,11 @@ input.n,select.n{width:100%;font-size:17px;padding:6px 3px;text-align:center;bor
 #tot{position:fixed;left:0;right:0;bottom:0;background:#1f4e79;color:#fff;padding:4px 10px;font-size:16px;display:flex;justify-content:space-between}
 header.br~#tot{background:#1b7a43}
 #msg{font-size:13px;color:#ffe9a8;margin-top:2px;min-height:20px}
+#hdslot .hd{margin:4px -4px 0;padding:0 6px;color:#ffe9a8}
+.lockbar{margin:6px;padding:4px 10px;border-radius:8px;background:#fdecea;border:1px solid #e3a59d;color:#9b2c1f;font-weight:bold;text-align:center;line-height:2}
+#tot{align-items:center}#lkb{font-size:15px;font-weight:bold;border:0;border-radius:8px;padding:2px 12px;line-height:1.9;background:#ffd54f;color:#000}
+#lkb.un{background:#fdecea;color:#9b2c1f}
+input:disabled,select:disabled{background:#eef1f4!important;color:#333}
 #set{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:20;align-items:center;justify-content:center}
 #set .b{background:#fff;border-radius:12px;padding:16px;width:92%;max-width:440px}#set h3{margin:0 0 10px;color:#1f4e79}
 #set label{display:block;font-size:14px;font-weight:bold;margin-top:10px}#set input{width:100%;font-size:15px;padding:8px;border:1px solid #9fb3c8;border-radius:6px}
@@ -49,9 +54,9 @@ header.br~#tot{background:#1b7a43}
 <div class="bar" id="bar1"></div>
 <div class="bar tabs" id="tabs"></div>
 <div class="bar"><input id="q" placeholder="نمبر یا نام تلاش کریں" oninput="draw()"><button onclick="reload()">⟳</button><button onclick="openSet()">⚙</button></div>
-<div id="msg"></div></header>
+<div id="msg"></div><div id="hdslot"></div></header>
 <div id="main"></div><div style="height:64px"></div>
-<div id="tot"><span id="tl"></span><span id="tc"></span></div>
+<div id="tot"><span id="tl"></span><button id="lkb" onclick="lockBtn()"></button><span id="tc"></span></div>
 <div id="set"><div class="b"><h3 id="sT">⚙ سیٹنگ (ایک بار)</h3>
 <label>Web app URL  (آخر پر /exec)</label><input id="sU" placeholder="https://script.google.com/macros/s/.../exec">
 <label>PIN</label><input id="sP" inputmode="numeric">
@@ -66,12 +71,42 @@ if(APP=='c'&&!localStorage.getItem(P+'url')){['url','pin'].forEach(function(k){v
 var U=localStorage.getItem(P+'url')||'',PIN=localStorage.getItem(P+'pin')||'';
 (function(){var p=new URLSearchParams(location.search);
  if(p.get('u')){U=p.get('u');localStorage.setItem(P+'url',U);history.replaceState(null,'',location.pathname)}})();
-var A=L(P+'acc',[]),E={},Q=L(P+'queue',[]).map(function(q){return q.t?q:{t:'e',e:q}}),S={shift:'Morning',kind:'Purchase',btab:'slip'},INFO=L(P+'binfo_'+BR,null),D={};
+var LK=[],APPC='C',A=L(P+'acc',[]),E={},Q=L(P+'queue',[]).map(function(q){return q.t?q:{t:'e',e:q}}),S={shift:'Morning',kind:'Purchase',btab:'slip'},INFO=L(P+'binfo_'+BR,null),D={};
 function msg(t){$('msg').textContent=t}
+APPC=BR||'C';
+function isLk(){return BR?LK.length>0:(LK.indexOf(S.shift)>=0||LK.indexOf('all')>=0)}
+function shN(){return S.shift=='Morning'?'صبح':'شام'}
+function loadLocks(){var d=dval();LK=L(P+'lk_'+d,[]);
+ return api({api:'locks',app:APPC,date:d}).then(function(r){if(r.ok){LK=r.locks||[];SV(P+'lk_'+d,LK)}}).catch(function(){})}
+function lockUi(){var lk=isLk(),b=$('lkb');
+ b.textContent=lk?'🔓 تبدیلی (ایڈمن)':('✔ محفوظ کریں'+(BR?'':' — '+shN()));b.className=lk?'un':'';
+ if(!lk)return;
+ [].forEach.call(document.querySelectorAll('#main input,#main select'),function(i){i.disabled=true});
+ [].forEach.call(document.querySelectorAll('#main .add,#main .x'),function(x){x.style.display='none'});
+ $('main').insertAdjacentHTML('afterbegin','<div class="lockbar">🔒 یہ '+(BR?'تاریخ':'تاریخ ('+shN()+')')+' محفوظ ہو چکی — صرف دیکھ سکتے ہیں</div>')}
+function myQ(){var d=dval();return Q.filter(function(q){return q.t=='b'?(q.b==BR&&q.date==d):(q.e.date==d&&(BR?false:q.e.shift==S.shift))}).length}
+function lockBtn(){if(isLk())return unlock();
+ if(!navigator.onLine)return alert('محفوظ کرنے کے لیے انٹرنیٹ چاہیے۔');
+ if(!confirm((BR?'آج کی تاریخ':shN()+' ('+dval()+')')+' محفوظ کر دیں؟\n\nمحفوظ کرنے کے بعد موبائل پر اس میں تبدیلی نہیں ہو سکے گی، صرف دیکھ سکیں گے۔\n(تبدیلی صرف ایڈمن پاس ورڈ سے)'))return;
+ msg('محفوظ ہو رہا ہے...');flush();var t0=Date.now();
+ (function wait(){if(myQ()&&Date.now()-t0<40000){flush();return setTimeout(wait,400)}
+  if(myQ())return msg('کچھ انٹریاں ابھی نہیں گئیں — انٹرنیٹ دیکھ کر دوبارہ محفوظ دبائیں');
+  post({api:'lock',app:APPC,date:dval(),shift:BR?'':S.shift}).then(function(r){if(!r.ok)throw new Error(r.error=='PIN'?'غلط PIN':r.error);
+   LK.push(BR?'all':S.shift);SV(P+'lk_'+dval(),LK);msg('✓ محفوظ ہو گیا');draw()}).catch(function(x){msg('محفوظ نہیں ہوا: '+x.message)})})()}
+function unlock(){if(!navigator.onLine)return alert('اس کے لیے انٹرنیٹ چاہیے۔');
+ var pw=prompt('تبدیلی کے لیے ایڈمن پاس ورڈ لکھیں');if(!pw)return;
+ post({api:'unlock',app:APPC,date:dval(),shift:BR?'':S.shift,admin:pw}).then(function(r){
+  if(!r.ok)return alert(r.error=='admin'?'ایڈمن پاس ورڈ غلط ہے':'نہیں ہوا: '+r.error);
+  LK=LK.filter(function(x){return BR?false:(x!=S.shift&&x!='all')});SV(P+'lk_'+dval(),LK);msg('🔓 کھل گیا — تبدیلی کر کے دوبارہ محفوظ کریں');draw()}).catch(function(x){alert('نہیں ہوا: '+x.message)})}
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
 function dval(){return $('d')?$('d').value:''}
 function net(){var n=$('net');if(!navigator.onLine){n.className='off';n.textContent='آف لائن'}else if(Q.length){n.className='wait';n.textContent=Q.length+' باقی'}else{n.className='';n.textContent='آن لائن'}}
-function openSet(){$('sU').value=U;$('sP').value=PIN;$('set').style.display='flex'}
+function showSet(){$('sU').value=U;$('sP').value=PIN;$('set').style.display='flex'}
+function openSet(){if(!U||!PIN||PINBAD)return showSet();   // first time: the link and PIN go in
+ if(!navigator.onLine)return alert('سیٹنگ کے لیے انٹرنیٹ چاہیے (ایڈمن پاس ورڈ گوگل سے چیک ہوتا ہے)۔');
+ var pw=prompt('سیٹنگ صرف ایڈمن — ایڈمن پاس ورڈ لکھیں');if(!pw)return;
+ post({api:'checkadmin',app:APPC,admin:pw}).then(function(r){if(r.ok)showSet();else alert(r.error=='admin'?'ایڈمن پاس ورڈ غلط ہے':'نہیں ہوا: '+(r.error=='PIN'?'PIN غلط':r.error))})
+  .catch(function(x){alert('نہیں ہوا: '+x.message)})}
 function saveSet(){U=$('sU').value.trim();PIN=$('sP').value.trim();localStorage.setItem(P+'url',U);localStorage.setItem(P+'pin',PIN);$('set').style.display='none';reload()}
 function api(params){return fetch(U+(U.indexOf('?')<0?'?':'&')+new URLSearchParams(Object.assign({pin:PIN},params))).then(function(r){return r.json()})}
 function post(body){body.pin=PIN;return fetch(U,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(body)}).then(function(r){return r.json()})}
@@ -92,6 +127,7 @@ function build(){var h=$('hdr'),d=dval()||today();$('sT').textContent='⚙ سی�
 function marks(){if(!BR){$('bM').className=S.shift=='Morning'?'on':'';$('bE').className=S.shift=='Evening'?'on':''}
  var cur=BR?S.btab:S.kind;[].forEach.call($('tabs').children,function(b){b.className=b.dataset.k==cur?'on':''})}
 function setShift(s){S.shift=s;marks();draw()}
+function setShiftL(s){setShift(s)}
 function setTab(k){if(BR)S.btab=k;else S.kind=k;$('q').value='';marks();draw()}
 /* ================= load ================= */
 function reload(){if(!U||!PIN){openSet();return}
@@ -99,14 +135,16 @@ function reload(){if(!U||!PIN){openSet();return}
  if(BR){
   api({api:'binit',b:BR}).then(function(r){if(!r.ok)throw new Error(r.error=='PIN'?'غلط PIN':(r.error=='branch'?'یہ برانچ ابھی نہیں بھیجی گئی (کمپیوٹر: Send account list)':r.error));
     INFO=r.info;SV(P+'binfo_'+BR,INFO);$('sub').textContent=INFO.urdu||'کشمیر ڈیریز جڑانوالہ';return api({api:'bentries',b:BR,date:d})})
-   .then(function(r){if(!r)return;if(!r.ok)throw new Error(r.error);D=r.data||{};pendingInto();SV(P+'bd_'+BR+'_'+d,D);msg('');draw();flush()})
-   .catch(function(x){D=L(P+'bd_'+BR+'_'+d,{});pendingInto();draw();offMsg(x)});
+   .then(function(r){if(!r)return;if(!r.ok)throw new Error(r.error);D=r.data||{};pendingInto();SV(P+'bd_'+BR+'_'+d,D);return loadLocks()}).then(function(){PINBAD=false;if(INFO){msg('');draw();flush()}})
+   .catch(function(x){D=L(P+'bd_'+BR+'_'+d,{});LK=L(P+'lk_'+d,[]);pendingInto();draw();offMsg(x)});
   return}
  api({api:'accounts'}).then(function(r){if(!r.ok)throw new Error(r.error=='PIN'?'غلط PIN':r.error);A=r.accounts||[];SV(P+'acc',A);
    if(!A.length)msg('اکاؤنٹ لسٹ خالی: کمپیوٹر سے "Send account list" دبائیں');return api({api:'entries',date:d})})
-  .then(function(r){if(!r)return;E={};(r.entries||[]).forEach(function(e){E[ekey(e)]=e});pendingInto();SV(P+'E_'+d,E);if(A.length)msg('');draw();flush()})
-  .catch(function(x){E=L(P+'E_'+d,{});pendingInto();draw();offMsg(x)})}
-function offMsg(x){msg(navigator.onLine?('غلطی: '+x.message+' (⚙ میں لنک / PIN دیکھیں)'):'انٹرنیٹ نہیں — انٹری کرتے جائیں، انٹرنیٹ آتے ہی خود چلی جائیں گی')}
+  .then(function(r){if(!r)return;E={};(r.entries||[]).forEach(function(e){E[ekey(e)]=e});pendingInto();SV(P+'E_'+d,E);return loadLocks()}).then(function(){PINBAD=false;if(A.length)msg('');draw();flush()})
+  .catch(function(x){E=L(P+'E_'+d,{});LK=L(P+'lk_'+d,[]);pendingInto();draw();offMsg(x)})}
+function offMsg(x){msg(navigator.onLine?('غلطی: '+x.message+' (⚙ میں لنک / PIN دیکھیں)'):'انٹرنیٹ نہیں — انٹری کرتے جائیں، انٹرنیٹ آتے ہی خود چلی جائیں گی');
+ if(navigator.onLine&&/PIN/.test(x.message)){PINBAD=true}}
+var PINBAD=false;
 function ekey(e){return e.id?('id|'+e.id):(e.date+'|'+e.shift+'|'+e.kind+'|'+e.name)}
 function pendingInto(){var d=dval();Q.forEach(function(q){
   if(q.t=='b'){if(q.b==BR&&q.date==d)for(var k in q.kv)D[k]=q.kv[k]}
@@ -119,26 +157,41 @@ function push(item){
 var busy=false;
 function flush(){if(busy||!Q.length||!navigator.onLine||!U)return;busy=true;var it=Q[0];
  var p=it.t=='b'?post({api:'bsave',b:it.b,date:it.date,kv:it.kv}):post({api:'save',entry:it.e});
- p.then(function(r){if(!r.ok)throw new Error(r.error=='PIN'?'غلط PIN':String(r.error));
+ p.then(function(r){
+   if(!r.ok&&r.error=='locked'){Q.shift();SV(P+'queue',Q);busy=false;net();msg('🔒 یہ تاریخ محفوظ ہو چکی — یہ انٹری نہیں گئی');loadLocks().then(draw);return flush()}
+   if(!r.ok)throw new Error(r.error=='PIN'?'غلط PIN':String(r.error));
    Q.shift();SV(P+'queue',Q);busy=false;net();msg('✓ محفوظ');paint();flush()})
   .catch(function(x){busy=false;net();msg((navigator.onLine?'ابھی نہیں گئی: '+x.message:'انٹرنیٹ نہیں')+' — '+Q.length+' انٹری موبائل میں محفوظ، خود چلی جائیں گی');setTimeout(flush,15000)})}
 function waiting(fn){return Q.some(fn)}
 /* ================= draw ================= */
-function draw(){if(BR)return drawBranch();if(S.kind.indexOf('Random')===0)return drawRandom();drawMain()}
-function wire(root){[].forEach.call((root||document).querySelectorAll(root?'input,select':'#main input,#main select'),wireEl)}
+function draw(){$('hdslot').innerHTML='';if(BR)drawBranch();else if(S.kind.indexOf('Random')===0)drawRandom();else drawMain();lockUi()}
+function wire(root){[].forEach.call((root||document).querySelectorAll(root?'input,select':'#main input,#main select'),wireEl);order()}
+/* Next / Enter goes to the box BELOW: in a table the boxes are numbered column by column
+   (milk of all rows, then fat ...); Extra and Random cards stay line by line */
+function order(){var seq=[],groups=[];
+ if(BR)[].forEach.call(document.querySelectorAll('#main .card'),function(c){groups.push([].slice.call(c.querySelectorAll('.kv,.br3,.xr')))});
+ else groups.push([].slice.call(document.querySelectorAll('#main .row,#main .rc')));
+ groups.forEach(function(rows){
+  var cells=rows.map(function(r){return [].slice.call(r.querySelectorAll('input,select'))});
+  if(rows.length&&(rows[0].classList.contains('xr')||rows[0].classList.contains('rc'))){cells.forEach(function(c){seq=seq.concat(c)});return}   // Extra / Random cards: in their own order (name, then its boxes)
+  var n=Math.max.apply(null,[0].concat(cells.map(function(c){return c.length})));
+  for(var j=0;j<n;j++)cells.forEach(function(c){if(c[j])seq.push(c[j])})});
+ seq.forEach(function(el,i){el.tabIndex=i+1;el.setAttribute('enterkeyhint',i<seq.length-1?'next':'done')});
+ ORDER=seq}
+var ORDER=[];
 function wireEl(i){
   i.addEventListener('change',function(){onEdit(i)});
   i.addEventListener('focus',function(){try{i.select()}catch(e){}});
   i.addEventListener('keydown',function(ev){if(ev.key!=='Enter')return;ev.preventDefault();
-   var k=[].indexOf.call(document.querySelectorAll('#main input,#main select'),i);
+   var k=ORDER.indexOf(i);
    i.blur();   // the value is saved now (and a new Extra line may come)
-   var all=document.querySelectorAll('#main input,#main select');
-   if(all[k+1])all[k+1].focus();else{var a=document.querySelector('#main .add');if(a)a.click()}})}
+   var nx=ORDER[k+1];
+   if(nx&&!nx.disabled)nx.focus();else{var a=document.querySelector('#main .add');if(a)a.click()}})}
 function xRow(i){return '<div class="xr" data-row="x'+i+'"><b style="color:#1b7a43;text-align:center">'+i+'</b><input class="d" data-k="x'+i+'_d" placeholder="تفصیل" value="'+esc(D['x'+i+'_d']||'')+'"><input class="n" inputmode="decimal" data-k="x'+i+'_a" value="'+esc(D['x'+i+'_a']||'')+'"></div>'}
 function onEdit(i){if(BR)return bEdit(i);if(i.closest('.rc'))return rEdit(i.closest('.rc'));mEdit(i.closest('.row'))}
 /* ---- Purchase / Sale ---- */
 function drawMain(){var q=$('q').value.trim().toLowerCase(),h='',d=dval();
- h='<div class="hd"><span>#</span><span>نام</span><span>دودھ</span><span>فیٹ</span><span>LR</span></div>';
+ h='';$('hdslot').innerHTML='<div class="hd"><span>#</span><span>نام</span><span>دودھ</span><span>فیٹ</span><span>LR</span></div>';   // stays visible (in the fixed header)
  A.filter(function(a){return a.kind==S.kind&&(!a.shift||a.shift==S.shift)}).forEach(function(a){
   if(q&&String(a.no)!==q&&a.name.toLowerCase().indexOf(q)<0&&String(a.urdu).indexOf(q)<0)return;
   var e=E[d+'|'+S.shift+'|'+S.kind+'|'+a.name]||{},v=function(x){return x===''||x==null?'':x};
@@ -159,7 +212,7 @@ function rCard(e,no,pk){var v=function(x){return x===''||x==null?'':x};
   '<div class="g"><span><label>دودھ</label><input class="n" inputmode="decimal" data-f="milk" value="'+v(e.milk)+'"></span><span><label>فیٹ</label><input class="n" inputmode="decimal" data-f="fat" value="'+v(e.fat)+'"></span>'+
   '<span><label>LR</label><input class="n" inputmode="decimal" data-f="lr" value="'+v(e.lr)+'"></span><span><label>ریٹ</label><input class="n" inputmode="decimal" data-f="rate" value="'+v(e.rate)+'"></span>'+
   '<span><label>'+pk+'</label><input class="n" inputmode="decimal" data-f="pay" value="'+v(e.pay)+'"></span></div></div>'}
-function rAdd(){var e={id:uid(),date:dval(),shift:S.shift,kind:S.kind,name:'',milk:'',fat:'',lr:'',rate:'',pay:''};E[ekey(e)]=e;drawRandom();
+function rAdd(){if(isLk())return;var e={id:uid(),date:dval(),shift:S.shift,kind:S.kind,name:'',milk:'',fat:'',lr:'',rate:'',pay:''};E[ekey(e)]=e;drawRandom();
  var c=document.querySelector('.rc[data-id="'+e.id+'"] input');if(c)c.focus()}
 function rEdit(c){var id=c.dataset.id,old=E['id|'+id]||{},f={};c.querySelectorAll('input').forEach(function(i){f[i.dataset.f]=i.value.trim()});
  for(var k in f)if(k!='name'&&!isNum(f[k])){c.classList.add('err');msg('غلط نمبر: '+f[k]);return}
