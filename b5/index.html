@@ -44,6 +44,18 @@ header.br~#tot{background:#1b7a43}
 #tot{align-items:center}#lkb{font-size:15px;font-weight:bold;border:0;border-radius:8px;padding:2px 12px;line-height:1.9;background:#ffd54f;color:#000}
 #lkb.un{background:#fdecea;color:#9b2c1f}
 input:disabled,select:disabled{background:#eef1f4!important;color:#333}
+#main input,#main select{scroll-margin-top:calc(var(--hh,200px) + 6px);scroll-margin-bottom:70px}
+.nm,.br3 .l{cursor:pointer}.nm:active,.br3 .l:active{background:#e3eefb}
+#hist{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:30;align-items:flex-start;justify-content:center;padding-top:30px}
+#hist .b{background:#fff;border-radius:12px;width:96%;max-width:520px;max-height:86vh;display:flex;flex-direction:column;overflow:hidden}
+#hist h3{margin:0;padding:6px 12px;background:#1f4e79;color:#fff;font-size:17px;line-height:2;display:flex;justify-content:space-between}
+header.br~#hist h3{background:#1b7a43}
+#hist .sc{overflow:auto;flex:1}#hist table{width:100%;border-collapse:collapse;font-size:15px}
+#hist th{position:sticky;top:0;background:#e3eefb;color:#1f4e79;font-size:13px;padding:4px;line-height:1.8}
+#hist td{padding:5px 6px;border-bottom:1px solid #eef1f4;text-align:center}#hist td.r{text-align:right}
+#hist tr.t td{font-weight:bold;background:#fff8dc;border-top:2px solid #1f4e79;position:sticky;bottom:0}
+#hist .cl{border:0;background:#fff;color:#1f4e79;font-size:16px;font-weight:bold;border-radius:8px;padding:0 12px}
+.xacc{background:#f3f6fa}.xacc .l{color:#1b7a43}
 #set{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:20;align-items:center;justify-content:center}
 #set .b{background:#fff;border-radius:12px;padding:16px;width:92%;max-width:440px}#set h3{margin:0 0 10px;color:#1f4e79}
 #set label{display:block;font-size:14px;font-weight:bold;margin-top:10px}#set input{width:100%;font-size:15px;padding:8px;border:1px solid #9fb3c8;border-radius:6px}
@@ -57,6 +69,7 @@ input:disabled,select:disabled{background:#eef1f4!important;color:#333}
 <div id="msg"></div><div id="hdslot"></div></header>
 <div id="main"></div><div style="height:64px"></div>
 <div id="tot"><span id="tl"></span><button id="lkb" onclick="lockBtn()"></button><span id="tc"></span></div>
+<div id="hist"><div class="b"><h3><span id="hT"></span><button class="cl" onclick="$('hist').style.display='none'">✕</button></h3><div class="sc" id="hB"></div></div></div>
 <div id="set"><div class="b"><h3 id="sT">⚙ سیٹنگ (ایک بار)</h3>
 <label>Web app URL  (آخر پر /exec)</label><input id="sU" placeholder="https://script.google.com/macros/s/.../exec">
 <label>PIN</label><input id="sP" inputmode="numeric">
@@ -84,9 +97,12 @@ function lockUi(){var lk=isLk(),b=$('lkb');
  [].forEach.call(document.querySelectorAll('#main input,#main select'),function(i){i.disabled=true});
  [].forEach.call(document.querySelectorAll('#main .add,#main .x'),function(x){x.style.display='none'});
  $('main').insertAdjacentHTML('afterbegin','<div class="lockbar">🔒 یہ '+(BR?'تاریخ':'تاریخ ('+shN()+')')+' محفوظ ہو چکی — صرف دیکھ سکتے ہیں</div>')}
-function myQ(){var d=dval();return Q.filter(function(q){return q.t=='b'?(q.b==BR&&q.date==d):(q.e.date==d&&(BR?false:q.e.shift==S.shift))}).length}
+function myQ(){var d=dval();return Q.filter(function(q){return q.t=='l'?false:(q.t=='b'?(q.b==BR&&q.date==d):(q.e.date==d&&(BR?false:q.e.shift==S.shift)))}).length}
 function lockBtn(){if(isLk())return unlock();
- if(!navigator.onLine)return alert('محفوظ کرنے کے لیے انٹرنیٹ چاہیے۔');
+ if(!navigator.onLine){   // no internet: saved in the phone now, goes (entries first, then the save) when the internet is back
+  if(!confirm((BR?'یہ تاریخ':shN()+' ('+dval()+')')+' محفوظ کر دیں؟\nمحفوظ کرنے کے بعد اس میں تبدیلی نہیں ہو سکے گی۔'))return;
+  Q.push({t:'l',app:APPC,date:dval(),shift:BR?'':S.shift});SV(P+'queue',Q);LK.push(BR?'all':S.shift);SV(P+'lk_'+dval(),LK);
+  draw();net();msg('✓ محفوظ ہو گیا (موبائل میں) — انٹرنیٹ آنے پر خود ہی اپلوڈ ہو جائے گا');return}
  if(!confirm((BR?'آج کی تاریخ':shN()+' ('+dval()+')')+' محفوظ کر دیں؟\n\nمحفوظ کرنے کے بعد موبائل پر اس میں تبدیلی نہیں ہو سکے گی، صرف دیکھ سکیں گے۔\n(تبدیلی صرف ایڈمن پاس ورڈ سے)'))return;
  msg('محفوظ ہو رہا ہے...');flush();var t0=Date.now();
  (function wait(){if(myQ()&&Date.now()-t0<40000){flush();return setTimeout(wait,400)}
@@ -117,9 +133,11 @@ function today(){var t=new Date();return t.getFullYear()+'-'+('0'+(t.getMonth()+
 /* ================= layout ================= */
 var KINDS=[['Purchase','پرچیز'],['Sale','سیل'],['Random Purchase','ر۔ پرچیز'],['Random Sale','ر۔ سیل']];
 var BTABS=[['slip','سلپ و سیل'],['cust','ادھار گاہک'],['acc','خرچے / ملازم'],['extra','ایکسٹرا']];
-function build(){var h=$('hdr'),d=dval()||today();$('sT').textContent='⚙ سیٹنگ  —  '+(BR?('KMS '+BR):'KMS سنٹر');
+function hh(){try{document.documentElement.style.setProperty('--hh',$('hdr').offsetHeight+'px')}catch(e){}}
+window.addEventListener('resize',hh);
+function build(){var h=$('hdr'),d=dval()||today();$('sT').textContent='⚙ سیٹنگ  —  '+(BR?('KMS '+BR):'VMC');
  h.className=BR?'br':'';
- $('ttl').textContent=BR?('KMS '+BR):'KMS سنٹر';$('sub').textContent=BR&&INFO&&INFO.urdu?INFO.urdu:'کشمیر ڈیریز جڑانوالہ';
+ $('ttl').textContent=BR?('KMS '+BR):'VMC';$('sub').textContent=BR&&INFO&&INFO.urdu?INFO.urdu:'کشمیر ڈیریز جڑانوالہ';
  $('bar1').innerHTML='<input type="date" id="d" value="'+d+'">'+(BR?'':'<button id="bM" onclick="setShift(\'Morning\')">صبح</button><button id="bE" onclick="setShift(\'Evening\')">شام</button>');
  $('d').addEventListener('change',reload);
  $('tabs').innerHTML=(BR?BTABS:KINDS).map(function(k){return '<button data-k="'+k[0]+'" onclick="setTab(this.dataset.k)">'+k[1]+'</button>'}).join('');
@@ -147,16 +165,18 @@ function offMsg(x){msg(navigator.onLine?('غلطی: '+x.message+' (⚙ میں ل
 var PINBAD=false;
 function ekey(e){return e.id?('id|'+e.id):(e.date+'|'+e.shift+'|'+e.kind+'|'+e.name)}
 function pendingInto(){var d=dval();Q.forEach(function(q){
+  if(q.t=='l'){if(q.date==d&&LK.indexOf(q.shift||'all')<0)LK.push(q.shift||'all');return}
   if(q.t=='b'){if(q.b==BR&&q.date==d)for(var k in q.kv)D[k]=q.kv[k]}
   else if(q.e.date==d){if(q.e.del)delete E[ekey(q.e)];else E[ekey(q.e)]=q.e}})}
 /* ================= queue: saved in the phone, sent when online ================= */
 function push(item){
+ if(!navigator.onLine&&item.t!='l')msg('✓ محفوظ (موبائل میں) — انٹرنیٹ آتے ہی خود اپلوڈ ہو جائے گی');
  if(item.t=='b'){var o=Q.find(function(q){return q.t=='b'&&q.b==item.b&&q.date==item.date&&q!==Q[0]});if(o){for(var k in item.kv)o.kv[k]=item.kv[k]}else Q.push(item)}
  else{Q=Q.filter(function(q,i){return i===0||q.t!='e'||ekey(q.e)!==ekey(item.e)});Q.push(item)}
  SV(P+'queue',Q);net();flush()}
 var busy=false;
 function flush(){if(busy||!Q.length||!navigator.onLine||!U)return;busy=true;var it=Q[0];
- var p=it.t=='b'?post({api:'bsave',b:it.b,date:it.date,kv:it.kv}):post({api:'save',entry:it.e});
+ var p=it.t=='l'?post({api:'lock',app:it.app,date:it.date,shift:it.shift}):(it.t=='b'?post({api:'bsave',b:it.b,date:it.date,kv:it.kv}):post({api:'save',entry:it.e}));
  p.then(function(r){
    if(!r.ok&&r.error=='locked'){Q.shift();SV(P+'queue',Q);busy=false;net();msg('🔒 یہ تاریخ محفوظ ہو چکی — یہ انٹری نہیں گئی');loadLocks().then(draw);return flush()}
    if(!r.ok)throw new Error(r.error=='PIN'?'غلط PIN':String(r.error));
@@ -164,7 +184,34 @@ function flush(){if(busy||!Q.length||!navigator.onLine||!U)return;busy=true;var 
   .catch(function(x){busy=false;net();msg((navigator.onLine?'ابھی نہیں گئی: '+x.message:'انٹرنیٹ نہیں')+' — '+Q.length+' انٹری موبائل میں محفوظ، خود چلی جائیں گی');setTimeout(flush,15000)})}
 function waiting(fn){return Q.some(fn)}
 /* ================= draw ================= */
-function draw(){$('hdslot').innerHTML='';if(BR)drawBranch();else if(S.kind.indexOf('Random')===0)drawRandom();else drawMain();lockUi()}
+function draw(){$('hdslot').innerHTML='';if(BR)drawBranch();else if(S.kind.indexOf('Random')===0)drawRandom();else drawMain();lockUi();hh()}
+function month(){return dval().slice(0,7)}
+function f1(x){x=Number(x)||0;return Math.round(x*100)/100}
+function histOpen(title){$('hT').textContent=title+'  —  '+month();$('hB').innerHTML='<p style="text-align:center;padding:20px">لوڈ ہو رہا ہے...</p>';$('hist').style.display='flex'}
+function histFail(x){$('hB').innerHTML='<p style="text-align:center;padding:20px;color:#c0392b">'+(navigator.onLine?('نہیں آیا: '+esc(x.message||x)):'مہینے کا حساب دیکھنے کے لیے انٹرنیٹ چاہیے')+'</p>'}
+function dd(d){return d.slice(8,10)+'-'+d.slice(5,7)}
+function histMain(name,urdu){histOpen(urdu||name);
+ api({api:'acchist',kind:S.kind,name:name,month:month()}).then(function(r){if(!r.ok)throw new Error(r.error);
+  var h='<table><tr><th>تاریخ</th><th>وقت</th><th>دودھ</th><th>فیٹ</th><th>LR</th></tr>',tm=0,tf=0,tl=0,nf=0,nl=0,dm=0,de=0;
+  (r.rows||[]).forEach(function(x){var m=Number(x.milk)||0;tm+=m;if(x.shift=='Morning')dm+=m;else de+=m;
+   if(x.fat!==''&&x.fat!=null){tf+=m*Number(x.fat);nf+=m}if(x.lr!==''&&x.lr!=null){tl+=m*Number(x.lr);nl+=m}
+   h+='<tr><td>'+dd(x.date)+'</td><td>'+(x.shift=='Morning'?'صبح':'شام')+'</td><td class="r">'+(x.milk===''?'':f1(x.milk))+'</td><td>'+(x.fat===''?'':x.fat)+'</td><td>'+(x.lr===''?'':x.lr)+'</td></tr>'});
+  if(!(r.rows||[]).length)h+='<tr><td colspan="5" style="padding:16px;color:#667">اس مہینے موبائل سے کوئی انٹری نہیں</td></tr>';
+  h+='<tr class="t"><td>ٹوٹل</td><td style="font-size:12px">ص '+f1(dm)+'<br>ش '+f1(de)+'</td><td class="r">'+f1(tm)+'</td><td>'+(nf?f1(tf/nf):'')+'</td><td>'+(nl?f1(tl/nl):'')+'</td></tr></table>';
+  $('hB').innerHTML=h}).catch(histFail)}
+function histBranch(prefix,title,cols){histOpen(title);   // cols: [[key suffix, heading, 'sum'|'count'|'text'|'regex']]
+ api({api:'bhist',b:BR,prefix:prefix,month:month()}).then(function(r){if(!r.ok)throw new Error(r.error);
+  var days=r.days||{},ks=Object.keys(days).sort(),tot=cols.map(function(){return 0}),h='<table><tr><th>تاریخ</th>'+cols.map(function(c){return '<th>'+c[1]+'</th>'}).join('')+'</tr>';
+  ks.forEach(function(d){var row=days[d],cells='',any=false;
+   cols.forEach(function(c,i){var v;
+    if(c[2]=='xsum'){v=0;for(var k in row)if(/_a$/.test(k))v+=Number(row[k])||0;v=v||''}else v=row[prefix+c[0]]==null?'':row[prefix+c[0]];
+    if(v!=='')any=true;
+    if(c[2]=='sum'||c[2]=='xsum')tot[i]+=Number(v)||0;else if(c[2]=='count'&&v)tot[i]=(tot[i]||0)+(v=='H'?0.5:(v=='P'?1:0));
+    cells+='<td'+(c[2]=='text'?' style="text-align:right"':' class="r"')+'>'+esc(v===''?'':(c[2]=='sum'||c[2]=='xsum'?f1(v):v))+'</td>'});
+   if(any)h+='<tr><td>'+dd(d)+'</td>'+cells+'</tr>'});
+  if(!ks.length)h+='<tr><td colspan="'+(cols.length+1)+'" style="padding:16px;color:#667">اس مہینے کوئی انٹری نہیں</td></tr>';
+  h+='<tr class="t"><td>ٹوٹل</td>'+cols.map(function(c,i){return '<td class="r">'+(c[2]=='text'?'':(c[2]=='count'?(tot[i]+' دن'):f1(tot[i])))+'</td>'}).join('')+'</tr></table>';
+  $('hB').innerHTML=h}).catch(histFail)}
 function wire(root){[].forEach.call((root||document).querySelectorAll(root?'input,select':'#main input,#main select'),wireEl);order()}
 /* Next / Enter goes to the box BELOW: in a table the boxes are numbered column by column
    (milk of all rows, then fat ...); Extra and Random cards stay line by line */
@@ -190,7 +237,7 @@ function wireEl(i){
 function xRow(i){return '<div class="xr" data-row="x'+i+'"><b style="color:#1b7a43;text-align:center">'+i+'</b><input class="d" data-k="x'+i+'_d" placeholder="تفصیل" value="'+esc(D['x'+i+'_d']||'')+'"><input class="n" inputmode="decimal" data-k="x'+i+'_a" value="'+esc(D['x'+i+'_a']||'')+'"></div>'}
 function onEdit(i){if(BR)return bEdit(i);if(i.closest('.rc'))return rEdit(i.closest('.rc'));mEdit(i.closest('.row'))}
 /* ---- Purchase / Sale ---- */
-function drawMain(){var q=$('q').value.trim().toLowerCase(),h='',d=dval();
+function drawMain(){var q=$('q').value.trim().toLowerCase(),h='',d=dval();setTimeout(function(){[].forEach.call(document.querySelectorAll('#main .row .nm'),function(n){n.onclick=function(){var a=A.find(function(x){return x.kind==S.kind&&x.name==decodeURIComponent(n.parentNode.dataset.n)});histMain(a?a.name:'',a?a.urdu:'')}})},0);
  h='';$('hdslot').innerHTML='<div class="hd"><span>#</span><span>نام</span><span>دودھ</span><span>فیٹ</span><span>LR</span></div>';   // stays visible (in the fixed header)
  A.filter(function(a){return a.kind==S.kind&&(!a.shift||a.shift==S.shift)}).forEach(function(a){
   if(q&&String(a.no)!==q&&a.name.toLowerCase().indexOf(q)<0&&String(a.urdu).indexOf(q)<0)return;
@@ -240,15 +287,17 @@ function drawBranch(){if(!INFO){$('main').innerHTML='<p style="text-align:center
  else if(S.btab=='cust'){var cs=(INFO.customers||[]);
   h+='<div class="card"><h3>Udhar customers<span>ادھار گاہک</span></h3><div class="br3 h"><span>نام</span><span>دودھ L</span><span>ٹھنڈا Rs</span><span>وصولی Rs</span></div>';
   cs.forEach(function(c){if(q&&String(c.name).toLowerCase().indexOf(q)<0&&String(c.urdu).indexOf(q)<0)return;var p='c:'+c.id+':',v=function(k){return esc(D[p+k]==null?'':D[p+k])};
-   h+='<div class="br3" data-row="'+p+'"><span class="l">'+esc(c.urdu||c.name)+'</span><input class="n" inputmode="decimal" data-k="'+p+'milk" value="'+v('milk')+'"><input class="n" inputmode="decimal" data-k="'+p+'thanda" value="'+v('thanda')+'"><input class="n" inputmode="decimal" data-k="'+p+'wasooli" value="'+v('wasooli')+'"></div>'});
+   h+='<div class="br3" data-row="'+p+'"><span class="l" data-h="c:'+c.id+':" data-t="'+esc(c.urdu||c.name)+'">'+esc(c.urdu||c.name)+'</span><input class="n" inputmode="decimal" data-k="'+p+'milk" value="'+v('milk')+'"><input class="n" inputmode="decimal" data-k="'+p+'thanda" value="'+v('thanda')+'"><input class="n" inputmode="decimal" data-k="'+p+'wasooli" value="'+v('wasooli')+'"></div>'});
   h+=(cs.length?'':'<p style="padding:8px;color:#667">کوئی گاہک نہیں</p>')+'</div>'}
  else if(S.btab=='acc'){var ac=INFO.accounts||[];
   [['Employee','Employees','ملازم'],['Expense','Expenses','خرچے'],['Other','Accounts / Partners','اکاؤنٹ / پارٹنر']].forEach(function(g){
-   var rows=ac.filter(function(a){return g[0]=='Other'?(a.kind!='Employee'&&a.kind!='Expense'):a.kind==g[0]});if(!rows.length)return;
+   var rows=ac.filter(function(a){return g[0]=='Other'?(a.kind!='Employee'&&a.kind!='Expense'):a.kind==g[0]});if(!rows.length&&g[0]!='Expense')return;
    var hd=g[0]=='Employee'?['حاضری','ادائیگی Rs','']:(g[0]=='Expense'?['آج خرچ Rs','نوٹ','']:['دیا Rs','لیا Rs','']);
    var b='<div class="br3 h"><span>نام</span><span>'+hd[0]+'</span><span>'+hd[1]+'</span><span></span></div>';
+   if(g[0]=='Expense'){var xs=0;for(var xk in D)if(/^x\d+_a$/.test(xk))xs+=Number(D[xk])||0;   // Extra: the total of the Extra tab (typed there)
+    b+='<div class="br3 xacc"><span class="l" data-h="x" data-k2="Extra" data-t="ایکسٹرا">ایکسٹرا  Extra</span><span class="r" style="text-align:right;font-weight:bold;padding-right:6px">'+f1(xs)+'</span><button class="n" style="grid-column:span 2" onclick="setTab(\'extra\')">تفصیل ▸</button></div>'}
    rows.forEach(function(a){if(q&&String(a.name).toLowerCase().indexOf(q)<0&&String(a.urdu).indexOf(q)<0)return;var p='a:'+a.id+':',v=function(k){return esc(D[p+k]==null?'':D[p+k])};
-    b+='<div class="br3" data-row="'+p+'"><span class="l">'+esc(a.urdu||a.name)+'</span>';
+    b+='<div class="br3" data-row="'+p+'"><span class="l" data-h="a:'+a.id+':" data-k2="'+g[0]+'" data-t="'+esc(a.urdu||a.name)+'">'+esc(a.urdu||a.name)+'</span>';
     if(g[0]=='Employee'){var at=D[p+'att']||'';b+='<select class="n" data-k="'+p+'att">'+['','P','H','A','Leave'].map(function(o){return '<option'+(o==at?' selected':'')+'>'+o+'</option>'}).join('')+'</select><input class="n" inputmode="decimal" data-k="'+p+'pay" value="'+v('pay')+'"><span></span>'}
     else if(g[0]=='Expense')b+='<input class="n" inputmode="decimal" data-k="'+p+'pay" value="'+v('pay')+'"><input class="n" style="grid-column:span 2;text-align:right" data-k="'+p+'note" value="'+v('note')+'">';
     else b+='<input class="n" inputmode="decimal" data-k="'+p+'pay" value="'+v('pay')+'"><input class="n" inputmode="decimal" data-k="'+p+'receive" value="'+v('receive')+'"><span></span>';
@@ -258,7 +307,13 @@ function drawBranch(){if(!INFO){$('main').innerHTML='<p style="text-align:center
  else{var n=10;for(var i=1;i<=30;i++)if((D['x'+i+'_d']||'')!==''||(D['x'+i+'_a']||'')!=='')n=Math.max(n,i+1);n=Math.min(30,n);var b='';
   for(var i=1;i<=n;i++)b+=xRow(i);
   h+=card('Extra (detail)','ایکسٹرا',b)}
- $('main').innerHTML=h;wire();paint()}
+ $('main').innerHTML=h;wire();paint();
+ [].forEach.call(document.querySelectorAll('#main .br3 .l[data-h]'),function(n){n.onclick=function(){var p=n.dataset.h,t=n.dataset.t,k=n.dataset.k2;
+  if(p=='x')return histBranch('x','ایکسٹرا',[['','رقم','xsum']]);
+  if(p[0]=='c')return histBranch(p,t,[['milk','دودھ L','sum'],['thanda','ٹھنڈا Rs','sum'],['wasooli','وصولی Rs','sum']]);
+  if(k=='Employee')return histBranch(p,t,[['att','حاضری','count'],['pay','ادائیگی Rs','sum']]);
+  if(k=='Expense')return histBranch(p,t,[['pay','خرچ Rs','sum'],['note','نوٹ','text']]);
+  histBranch(p,t,[['pay','دیا Rs','sum'],['receive','لیا Rs','sum']])}})}
 function bEdit(i){var k=i.dataset.k,v=i.value.trim();if(!TXT.test(k)&&!isNum(v)){i.classList.add('err');msg('غلط نمبر: '+v);return}
  if(!TXT.test(k)&&v!=='')v=String(nv(v));i.classList.remove('err');D[k]=v;var o={};o[k]=v;SV(P+'bd_'+BR+'_'+dval(),D);push({t:'b',b:BR,date:dval(),kv:o});
  if(S.btab=='extra'&&/^x\d+_/.test(k)){var m=+k.match(/\d+/)[0],cur=i.closest('.xr');   // the last line used: one more line under it (up to 30), cursor stays

@@ -1,7 +1,7 @@
 {
  "id": "./",
- "name": "KMS Centre - Kashmir Dairies",
- "short_name": "KMS سنٹر",
+ "name": "VMC - Kashmir Dairies",
+ "short_name": "VMC",
  "start_url": "./index.html",
  "scope": "./",
  "display": "standalone",
